@@ -110,14 +110,15 @@ class SimulacaoHall(Entity):
         corrente_ma = self.interface.corrente_ma
         campo_mt = self.interface.campo_mt
         sinal_polo = -1 if self.magneto_invertido else 1
-        fracao = ((corrente_ma - config.CORRENTE_MIN_MA)
-                  / (config.CORRENTE_MAX_MA - config.CORRENTE_MIN_MA))
+        fracao_velocidade = ((corrente_ma - config.CORRENTE_MIN_MA)
+                             / (config.CORRENTE_MAX_MA - config.CORRENTE_MIN_MA))
         velocidade = (config.VELOCIDADE_MIN
-                      + fracao * (config.VELOCIDADE_MAX - config.VELOCIDADE_MIN))
+                      + fracao_velocidade * (config.VELOCIDADE_MAX - config.VELOCIDADE_MIN))
         velocidade *= self.sentido_corrente
 
+        fracao_corrente = corrente_ma / config.CORRENTE_MAX_MA
         self.sistema_hall.campo_b_mt = campo_mt * sinal_polo
-        self.sistema_hall.frac_corrente = fracao
+        self.sistema_hall.frac_corrente = fracao_corrente
         self.sistema_hall.corrente_mA = corrente_ma
         campo_efetivo = campo_mt if self.magneto_baixo else 0
         tensao = calcular_tensao_hall(
