@@ -1,10 +1,10 @@
-from ursina import EditorCamera, Entity, camera, color, invoke, time
+from ursina import EditorCamera, Entity, Vec3, camera, color, invoke, time
 
 from . import config
-from .fisica import calcular_tensao_hall
+from .fisica import calcular_forca_magnetica, calcular_tensao_hall, calcular_velocidade_deriva
 from .interface import InterfaceSimulador
 from .particulas import Percurso, SistemaBolinhasCircuito, SistemaBolinhasHall
-from .vetores import VetoresEletron
+from .vetores import ReferencialEixos, VetoresEletron
 
 
 class SimulacaoHall(Entity):
@@ -40,6 +40,7 @@ class SimulacaoHall(Entity):
         self.corpo_pilha.model.setPos(-centro)
         self.pilha.position = centro * self.pilha.scale_x
         self.chao = Entity(model='plane', scale=20, color=color.dark_gray, y=-1)
+        self.referencial_eixos = ReferencialEixos(Vec3(-1.3, 0.05, -1.6))
         self.ima = Entity(model='models/ima.glb', scale=0.02,
                           position=(config.PLACA.centro_x, 2.5, config.PLACA.centro_z))
         limites = self.ima.model.getTightBounds()
@@ -123,8 +124,12 @@ class SimulacaoHall(Entity):
             corrente_ma, campo_efetivo, self.sentido_corrente, sinal_polo)
         self.interface.atualizar(tensao, self.sentido_corrente, self.cooldown_restante)
         self.sistema_atual.update(velocidade, time.dt)
+
+        velocidade_deriva = calcular_velocidade_deriva(corrente_ma)
+        forca = calcular_forca_magnetica(velocidade_deriva, campo_efetivo)
         self.vetores_eletron.update(
             self.sentido_corrente, sinal_polo,
             self.magneto_baixo and self.sistema_hall.ativo and campo_mt > 0,
+            velocidade_ms=velocidade_deriva, campo_mt=campo_efetivo, forca_n=forca,
         )
     # endregion

@@ -1,7 +1,7 @@
-from ursina import Button, Entity, Text, Vec4, application, camera, color, window
+from ursina import Button, Entity, Text, Vec4, application, camera, color, invoke, window
 from ursina.prefabs.slider import Slider
 
-from .config import B_MAX, B_MIN, CORRENTE_MAX_MA, CORRENTE_MIN_MA, VETORES
+from .config import B_MAX, B_MIN, CORRENTE_MAX_MA, CORRENTE_MIN_MA, DIAMETRO_FIO_M, PLACA, VETORES
 
 
 # region Unidade do voltimetro
@@ -28,7 +28,7 @@ class InterfaceSimulador:
         )
         Entity(parent=camera.ui, model='quad', position=(0, -0.385, 0.1),
                scale=(1.12, 0.18), color=Vec4(0.10, 0.11, 0.12, 0.96))
-        self.dica_ajuda = Text(text='H - Ajuda', position=(0.39, -0.435), scale=0.75)
+        self.dica_ajuda = Text(text='H - Fechar', position=(0.39, -0.435), scale=0.75)
         self.texto_sentido = Text(text='Sentido: normal', position=(-0.5, -0.435), scale=0.8)
         self.texto_cooldown = Text(text='', position=(-0.13, -0.435), scale=0.75,
                                   color=color.light_gray)
@@ -47,6 +47,7 @@ class InterfaceSimulador:
         self._criar_ajuda()
         self._criar_legenda()
         self._posicionar_interface()
+        invoke(self._fechar_ajuda_automaticamente, delay=2)
 
     def _posicionar_interface(self):
         self.leituras.x = -window.aspect_ratio / 2 + 0.04
@@ -70,6 +71,11 @@ class InterfaceSimulador:
         self.popup_comandos.enabled = not self.popup_comandos.enabled
         self.dica_ajuda.text = 'H - Fechar' if self.popup_comandos.enabled else 'H - Ajuda'
 
+    def _fechar_ajuda_automaticamente(self):
+        if self.popup_comandos.enabled:
+            self.popup_comandos.enabled = False
+            self.dica_ajuda.text = 'H - Ajuda'
+
     def atualizar(self, tensao, sentido, cooldown):
         self._posicionar_interface()
         self.texto_corrente.text = f'Corrente: {self.corrente_ma:.0f} mA'
@@ -83,7 +89,7 @@ class InterfaceSimulador:
     # A ajuda abre com H. Cores identificam os vetores; cruz e ponto indicam entrada e saida do
     # plano.
     def _criar_ajuda(self):
-        self.popup_comandos = Entity(parent=camera.ui, enabled=False, z=-1)
+        self.popup_comandos = Entity(parent=camera.ui, enabled=True, z=-1)
         Entity(parent=self.popup_comandos, model='quad', scale=(0.64, 0.38),
                color=Vec4(0.10, 0.11, 0.12, 1), z=0.1)
         Text(parent=self.popup_comandos,
@@ -105,4 +111,12 @@ class InterfaceSimulador:
         Text(parent=self.leituras,
              text='Cruz: entrando no plano\nPonto: saindo do plano',
              y=0.20, scale=0.7, color=color.light_gray)
+        Text(parent=self.leituras,
+             text=(f'Fio de cobre, diametro assumido: {DIAMETRO_FIO_M * 1000:.1f} mm\n'
+                   f'Placa de cobre, espessura {PLACA.espessura * 1000:.2f} mm\n'
+                   '(por isso V_H fica na casa de nV: cobre tem n alto,\n'
+                   'sensores Hall reais usam semicondutor)'),
+             y=0.11, scale=0.62, color=color.light_gray)
+        Text(parent=self.leituras, text='Eixos na cena: X vermelho, Y verde, Z azul',
+             y=-0.03, scale=0.65, color=color.light_gray)
     # endregion

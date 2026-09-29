@@ -24,6 +24,10 @@ B_MIN, B_MAX = 0, 200
 # Densidade de portadores em m^-3 e modulo da carga do eletron em coulombs.
 N_PORTADORES_COBRE = 8.49e28
 CARGA_ELETRON = 1.6e-19
+# Diametro assumido do fio (m), so pra fechar a area de secao transversal na velocidade de
+# deriva -- a cena nao modela o fio em escala real, entao e um palpite razoavel (fio fino de
+# bancada), nao uma medida do modelo 3D.
+DIAMETRO_FIO_M = 1e-3
 # endregion
 
 
